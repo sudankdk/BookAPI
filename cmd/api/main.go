@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+
 	r := chi.NewRouter()
 
 	r.Mount("/api", handlers.Routes())
