@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/redis/go-redis/v9"
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
 	bookdto "github.com/sudankdk/bookstore/internal/dto/BookDTO"
 	"github.com/sudankdk/bookstore/pkg/httpx/response"
@@ -12,10 +15,11 @@ import (
 
 type BookHandler struct {
 	bookService *book.CreateBookUsecase
+	Redis       *redis.Client
 }
 
-func NewBookHandler(s *book.CreateBookUsecase) *BookHandler {
-	return &BookHandler{bookService: s}
+func NewBookHandler(s *book.CreateBookUsecase, redisclient *redis.Client) *BookHandler {
+	return &BookHandler{bookService: s, Redis: redisclient}
 }
 
 func (h *BookHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -42,11 +46,22 @@ func (h *BookHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	ctx := context.Background()
+	//suru ma cachma xa ki xain check garnre
+	cached, err := h.Redis.Get(ctx, "book"+id).Result()
+	if err == nil {
+		//cache hit vayo
+		response.WriteJSON(w, 200, response.APIResponse{
+			Success: true,
+			Data:    cached,
+		})
+	}
 	book, err := h.bookService.GetById(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+	h.Redis.Set(ctx,"book"+id,book,10*time.Minute)
 	response.WriteJSON(w, 200, response.APIResponse{
 		Success: true,
 		Data:    book,

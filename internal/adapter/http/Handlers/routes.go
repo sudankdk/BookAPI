@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/sudankdk/bookstore/internal/data/sqldb"
@@ -15,6 +16,12 @@ import (
 )
 
 func Routes() *chi.Mux {
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // your Redis host and port
+		Password: "",               // no password set
+		DB:       0,                // default DB
+	})
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system env variables")
 	}
@@ -34,7 +41,7 @@ func Routes() *chi.Mux {
 	// repo := inmemorydb.NewInMemoryBookRepo(db)
 	repo := sqldb.NewSqlBookRepo(db)
 	service := book.NewBookHandler(repo)
-	handler := NewBookHandler(service)
+	handler := NewBookHandler(service,rdb)
 
 	r := chi.NewRouter()
 	r.Post("/books", handler.Create)
