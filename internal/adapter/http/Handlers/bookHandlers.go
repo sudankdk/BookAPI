@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
 	bookdto "github.com/sudankdk/bookstore/internal/dto/BookDTO"
 	"github.com/sudankdk/bookstore/pkg/httpx/response"
@@ -36,5 +37,30 @@ func (h *BookHandler) Create(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, 201, response.APIResponse{
 		Success: true,
 		Data:    bookEntity,
+	})
+}
+
+func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	book, err := h.bookService.GetById(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	response.WriteJSON(w, 200, response.APIResponse{
+		Success: true,
+		Data:    book,
+	})
+}
+
+func (h *BookHandler) List(w http.ResponseWriter, r *http.Request) {
+	books, err := h.bookService.List()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	response.WriteJSON(w, 200, response.APIResponse{
+		Success: true,
+		Data:    books,
 	})
 }
