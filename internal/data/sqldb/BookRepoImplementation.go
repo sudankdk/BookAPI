@@ -2,6 +2,7 @@ package sqldb
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,4 +33,39 @@ func (r *SQLBookRepo) Create(b entity.Book) (entity.Book, error) {
 	}
 	return b, nil
 
+}
+
+func (r *SQLBookRepo) Get(id string) (entity.Book, error) {
+	var book entity.Book
+	query := `select * from books where id=$1 `
+	row := r.DB.QueryRow(query, id)
+	if err := row.Scan(&book.Id, &book.Name, &book.Author, &book.PriceCents, &book.ISBN, &book.CreatedAt, &book.UpdatedAt, &book.PublishedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return book, fmt.Errorf("no book found with id %s", id)
+		} else {
+			return book, err
+		}
+	}
+	return book, nil
+}
+
+func (r *SQLBookRepo) List() ([]entity.Book, error) {
+	var books []entity.Book
+	query := `select * from books`
+	rows, err := r.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var book entity.Book
+		if err := rows.Scan(&book.Id, &book.Name, &book.Author, &book.PriceCents, &book.ISBN, &book.CreatedAt, &book.UpdatedAt, &book.PublishedAt); err != nil {
+			return nil, err
+		}
+		books = append(books, book)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return books, nil
 }

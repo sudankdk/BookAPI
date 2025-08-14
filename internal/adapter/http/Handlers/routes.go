@@ -38,5 +38,7 @@ func Routes() *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Post("/books", handler.Create)
+	r.Get("/books/{id}", handler.Get)
+	r.Get("/books", handler.List)
 	return r
 }
