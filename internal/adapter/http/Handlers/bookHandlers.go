@@ -61,7 +61,7 @@ func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	h.Redis.Set(ctx,"book"+id,book,10*time.Minute)
+	h.Redis.Set(ctx, "book"+id, book, 10*time.Minute)
 	response.WriteJSON(w, 200, response.APIResponse{
 		Success: true,
 		Data:    book,
@@ -78,4 +78,52 @@ func (h *BookHandler) List(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Data:    books,
 	})
+}
+
+func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "missing book id", http.StatusBadRequest)
+		return
+	}
+	ctx := context.Background()
+	var data map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	book, err := h.bookService.Update(id, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if h.Redis != nil {
+		h.Redis.Del(ctx, "book:"+id)
+	}
+
+	response.WriteJSON(w, 200, response.APIResponse{
+		Success: true,
+		Data:    book,
+	})
+
+}
+
+func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		http.Error(w, "missing book id", http.StatusBadRequest)
+		return
+	}
+	if err := h.bookService.Delete(id); err != nil {
+		response.WriteJSON(w, 200, response.APIResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+	response.WriteJSON(w, 200, response.APIResponse{
+		Success: true,
+		Data:    nil,
+	})
+
 }
