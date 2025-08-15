@@ -98,7 +98,7 @@ func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if h.Redis != nil {
-		h.Redis.Del(ctx, "book:"+id)
+		h.Redis.Del(ctx, "book"+id)
 	}
 
 	response.WriteJSON(w, 200, response.APIResponse{
@@ -120,6 +120,10 @@ func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			Error:   err.Error(),
 		})
 		return
+	}
+	ctx := context.Background()
+	if h.Redis != nil {
+		h.Redis.Del(ctx, "book"+id)
 	}
 	response.WriteJSON(w, 200, response.APIResponse{
 		Success: true,
