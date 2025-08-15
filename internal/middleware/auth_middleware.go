@@ -12,6 +12,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		tokenString := r.Header.Get("Authorization")
 		if tokenString == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Brearer token is missing , u bitch"))
 			return
 		}
 

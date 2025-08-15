@@ -3,14 +3,16 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
+	"github.com/rs/zerolog"
+	zerologlog "github.com/rs/zerolog/log"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/sudankdk/bookstore/internal/data/sqldb"
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
 	user "github.com/sudankdk/bookstore/internal/domain/usecase/User"
@@ -18,14 +20,15 @@ import (
 )
 
 func Routes() *chi.Mux {
+	zerologlog.Logger = zerologlog.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr: "localhost:6379",
+		DB:   0,
 	})
+
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using system env variables")
+		zerologlog.Warn().Msg("No .env file found, using system env variables")
 	}
 
 	dsn := fmt.Sprintf(
@@ -38,17 +41,18 @@ func Routes() *chi.Mux {
 	)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("failed to connect to DB: %v", err)
+		zerologlog.Fatal().Err(err).Msg("failed to connect to DB")
 	}
-	// repo := inmemorydb.NewInMemoryBookRepo(db)
+
 	repo := sqldb.NewSqlBookRepo(db)
 	service := book.NewBookHandler(repo)
 	handler := NewBookHandler(service, rdb)
 
-	serive2 := user.NewUserRepo(repo)
-	handler2 := NewUserHandler(serive2)
+	service2 := user.NewUserRepo(repo)
+	handler2 := NewUserHandler(service2)
 
 	r := chi.NewRouter()
+	r.Use(middleware.CustomLogger)
 
 	r.Group(func(pr chi.Router) {
 		pr.Use(middleware.AuthMiddleware)
