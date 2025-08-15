@@ -18,9 +18,9 @@ import (
 func Routes() *chi.Mux {
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // your Redis host and port
-		Password: "",               // no password set
-		DB:       0,                // default DB
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
 	})
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system env variables")
@@ -41,11 +41,14 @@ func Routes() *chi.Mux {
 	// repo := inmemorydb.NewInMemoryBookRepo(db)
 	repo := sqldb.NewSqlBookRepo(db)
 	service := book.NewBookHandler(repo)
-	handler := NewBookHandler(service,rdb)
+	handler := NewBookHandler(service, rdb)
 
 	r := chi.NewRouter()
 	r.Post("/books", handler.Create)
 	r.Get("/books/{id}", handler.Get)
 	r.Get("/books", handler.List)
+	r.Delete("/books/{id}", handler.Delete)
+	r.Patch("/books/{id}", handler.Update)
+
 	return r
 }
