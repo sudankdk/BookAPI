@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/sudankdk/bookstore/internal/data/sqldb"
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
+	user "github.com/sudankdk/bookstore/internal/domain/usecase/User"
 )
 
 func Routes() *chi.Mux {
@@ -43,12 +44,17 @@ func Routes() *chi.Mux {
 	service := book.NewBookHandler(repo)
 	handler := NewBookHandler(service, rdb)
 
+	serive2 := user.NewUserRepo(repo)
+	handler2 := NewUserHandler(serive2)
+
 	r := chi.NewRouter()
 	r.Post("/books", handler.Create)
 	r.Get("/books/{id}", handler.Get)
 	r.Get("/books", handler.List)
 	r.Delete("/books/{id}", handler.Delete)
 	r.Patch("/books/{id}", handler.Update)
+
+	r.Post("/register", handler2.Register)
 
 	return r
 }
