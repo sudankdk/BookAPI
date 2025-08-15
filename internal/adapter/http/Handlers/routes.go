@@ -14,6 +14,7 @@ import (
 	"github.com/sudankdk/bookstore/internal/data/sqldb"
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
 	user "github.com/sudankdk/bookstore/internal/domain/usecase/User"
+	"github.com/sudankdk/bookstore/internal/middleware"
 )
 
 func Routes() *chi.Mux {
@@ -48,13 +49,18 @@ func Routes() *chi.Mux {
 	handler2 := NewUserHandler(serive2)
 
 	r := chi.NewRouter()
-	r.Post("/books", handler.Create)
-	r.Get("/books/{id}", handler.Get)
-	r.Get("/books", handler.List)
-	r.Delete("/books/{id}", handler.Delete)
-	r.Patch("/books/{id}", handler.Update)
+
+	r.Group(func(pr chi.Router) {
+		pr.Use(middleware.AuthMiddleware)
+		pr.Post("/books", handler.Create)
+		pr.Get("/books/{id}", handler.Get)
+		pr.Get("/books", handler.List)
+		pr.Delete("/books/{id}", handler.Delete)
+		pr.Patch("/books/{id}", handler.Update)
+	})
 
 	r.Post("/register", handler2.Register)
+	r.Post("/login", handler2.Login)
 
 	return r
 }

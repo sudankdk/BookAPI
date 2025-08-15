@@ -37,3 +37,24 @@ func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Data:    userEntity,
 	})
 }
+
+func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var userdto userdto.UserLoginDTO
+	if err := json.NewDecoder(r.Body).Decode(&userdto); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+	res, err := u.userService.Login(userdto)
+	if err != nil {
+		response.WriteJSON(w, 400, response.APIResponse{
+			Error:   err.Error(),
+			Success: false,
+		})
+		return
+	}
+	response.WriteJSON(w, 200, response.APIResponse{
+		Success: true,
+		Data:    res,
+	})
+
+}
