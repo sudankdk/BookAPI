@@ -1,6 +1,7 @@
 package ws
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/olahol/melody"
@@ -26,7 +27,15 @@ func InitWS() {
 	})
 
 	m.HandleMessage(func(s *melody.Session, b []byte) {
-		m.Broadcast(b)
+		if _, ok := s.Get("username"); !ok {
+			s.Set("username", string(b))
+			s.Write([]byte("Welcome " + string(b)))
+			return
+		}
+		if name, ok := s.Get("username"); ok {
+			broadcastMsg := fmt.Sprintf("%s: %s", name, string(b))
+			m.Broadcast([]byte(broadcastMsg))
+		}
 	})
 
 }
