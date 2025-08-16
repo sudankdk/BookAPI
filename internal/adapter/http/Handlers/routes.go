@@ -17,6 +17,7 @@ import (
 	book "github.com/sudankdk/bookstore/internal/domain/usecase/Book"
 	user "github.com/sudankdk/bookstore/internal/domain/usecase/User"
 	"github.com/sudankdk/bookstore/internal/middleware"
+	"github.com/sudankdk/bookstore/internal/ws"
 )
 
 func Routes() *chi.Mux {
@@ -44,6 +45,8 @@ func Routes() *chi.Mux {
 		zerologlog.Fatal().Err(err).Msg("failed to connect to DB")
 	}
 
+	ws.InitWS()
+
 	repo := sqldb.NewSqlBookRepo(db)
 	service := book.NewBookHandler(repo)
 	handler := NewBookHandler(service, rdb)
@@ -65,6 +68,7 @@ func Routes() *chi.Mux {
 
 	r.Post("/register", handler2.Register)
 	r.Post("/login", handler2.Login)
+	r.Get("/ws", ws.HandleWs)
 
 	return r
 }

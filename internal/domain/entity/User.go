@@ -2,8 +2,6 @@ package entity
 
 import (
 	"time"
-
-	"github.com/go-playground/validator/v10"
 )
 
 type User struct {
@@ -15,7 +13,7 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (b *User) Validate() error {
-	validate := validator.New()
-	return validate.Struct(b)
-}
+// func (b *User) Validate() error {
+// 	validate := validator.New()
+// 	return validate.Struct(b)
+// }
