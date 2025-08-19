@@ -20,15 +20,6 @@ type Claims struct {
 }
 
 func (r *SQLBookRepo) Register(u entity.User) (entity.User, error) {
-	r.DB.Exec(`
-CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    username TEXT NOT NULL CHECK(length(username) >= 3),
-    email TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-)`)
 
 	if u.Id == "" {
 		u.Id = uuid.NewString()
